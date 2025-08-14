@@ -1,7 +1,17 @@
-import { useState, useRef } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
-import { exportAllData, downloadAsJson, getExportSummary } from '../utils/dataExport';
-import { importData, readJsonFile, validateImportData, type ImportOptions, type ImportResult } from '../utils/dataImport';
+import { useState, useRef } from "react";
+import { useDatabase } from "../context/DatabaseContext";
+import {
+  exportAllData,
+  downloadAsJson,
+  getExportSummary,
+} from "../utils/dataExport";
+import {
+  importData,
+  readJsonFile,
+  validateImportData,
+  type ImportOptions,
+  type ImportResult,
+} from "../utils/dataImport";
 
 export function DataManagement() {
   const { isReady, initError, getAll, create, clearStore } = useDatabase();
@@ -12,7 +22,10 @@ export function DataManagement() {
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileData, setFileData] = useState<any>(null);
-  const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] } | null>(null);
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    errors: string[];
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Import options
@@ -22,24 +35,28 @@ export function DataManagement() {
   const handleExport = async () => {
     setIsExporting(true);
     // Clear previous results when starting new export
-    setExportStatus('Exporting database...');
+    setExportStatus("Exporting database...");
     setImportStatus(null);
     setImportResult(null);
 
     try {
       const exportData = await exportAllData(getAll);
       downloadAsJson(exportData);
-      
+
       const summary = getExportSummary(exportData);
       setExportStatus(`✅ ${summary}`);
     } catch (error) {
-      setExportStatus(`❌ Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setExportStatus(
+        `❌ Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) {
       clearFileSelection();
@@ -47,7 +64,7 @@ export function DataManagement() {
     }
 
     // Clear previous results when selecting new file
-    setImportStatus('Reading and validating file...');
+    setImportStatus("Reading and validating file...");
     setImportResult(null);
     setExportStatus(null);
 
@@ -61,12 +78,16 @@ export function DataManagement() {
       setValidationResult(validation);
 
       if (validation.isValid) {
-        setImportStatus('✅ File is valid and ready to import');
+        setImportStatus("✅ File is valid and ready to import");
       } else {
-        setImportStatus(`❌ Validation failed: ${validation.errors.join(', ')}`);
+        setImportStatus(
+          `❌ Validation failed: ${validation.errors.join(", ")}`,
+        );
       }
     } catch (error) {
-      setImportStatus(`❌ Failed to read file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setImportStatus(
+        `❌ Failed to read file: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       clearFileSelection();
     }
   };
@@ -78,20 +99,25 @@ export function DataManagement() {
     setImportStatus(null);
     setImportResult(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleCreateBackup = async () => {
     if (!isReady) return;
-    
-    setImportStatus('Creating backup...');
+
+    setImportStatus("Creating backup...");
     try {
       const backupData = await exportAllData(getAll);
-      downloadAsJson(backupData, `backup_before_import_${new Date().toISOString().split('T')[0]}.json`);
-      setImportStatus('✅ Backup created successfully');
+      downloadAsJson(
+        backupData,
+        `backup_before_import_${new Date().toISOString().split("T")[0]}.json`,
+      );
+      setImportStatus("✅ Backup created successfully");
     } catch (error) {
-      setImportStatus(`❌ Backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setImportStatus(
+        `❌ Backup failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -100,7 +126,7 @@ export function DataManagement() {
 
     setIsImporting(true);
     // Clear previous results when starting new import
-    setImportStatus('Importing data...');
+    setImportStatus("Importing data...");
     setImportResult(null);
     setExportStatus(null);
 
@@ -111,18 +137,22 @@ export function DataManagement() {
         createBackup: false, // We handle backup separately now
       };
 
-      const result = await importData(
-        fileData as any,
-        options,
-        { getAll, create, clearStore }
-      );
+      const result = await importData(fileData as any, options, {
+        getAll,
+        create,
+        clearStore,
+      });
 
       setImportResult(result);
-      setImportStatus(result.success ? '✅ Import completed' : '❌ Import failed');
-      
+      setImportStatus(
+        result.success ? "✅ Import completed" : "❌ Import failed",
+      );
+
       // Keep results visible - don't auto-clear
     } catch (error) {
-      setImportStatus(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setImportStatus(
+        `❌ Import failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setIsImporting(false);
     }
@@ -139,7 +169,9 @@ export function DataManagement() {
   if (initError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 mb-2">Database Error</h2>
+        <h2 className="text-lg font-semibold text-red-800 mb-2">
+          Database Error
+        </h2>
         <p className="text-red-600">{initError}</p>
       </div>
     );
@@ -149,22 +181,24 @@ export function DataManagement() {
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Data Management</h1>
       <p className="text-gray-600 mb-8">
-        Export your data for backup or import data from previous exports. All operations include validation and safety checks.
+        Export your data for backup or import data from previous exports. All
+        operations include validation and safety checks.
       </p>
 
       {/* Export Section */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Export Database</h2>
         <p className="text-gray-600 mb-4">
-          Download all your data (users, skills, and relationships) as a JSON file for backup or transfer.
+          Download all your data (users, skills, and relationships) as a JSON
+          file for backup or transfer.
         </p>
-        
+
         <button
           onClick={handleExport}
           disabled={isExporting}
           className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isExporting ? 'Exporting...' : 'Export All Data'}
+          {isExporting ? "Exporting..." : "Export All Data"}
         </button>
 
         {exportStatus && (
@@ -178,12 +212,15 @@ export function DataManagement() {
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Import Database</h2>
         <p className="text-gray-600 mb-4">
-          Import data from a previously exported JSON file. Configure options below to control the import behavior.
+          Import data from a previously exported JSON file. Configure options
+          below to control the import behavior.
         </p>
 
         {/* Import Options */}
         <div className="bg-gray-50 p-4 rounded-md mb-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Import Options</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Import Options
+          </h3>
           <div className="space-y-2">
             <label className="flex items-center gap-2">
               <input
@@ -192,7 +229,9 @@ export function DataManagement() {
                 onChange={(e) => setSkipDuplicates(e.target.checked)}
                 className="rounded border-gray-300"
               />
-              <span className="text-sm text-gray-700">Skip duplicate records</span>
+              <span className="text-sm text-gray-700">
+                Skip duplicate records
+              </span>
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -201,7 +240,9 @@ export function DataManagement() {
                 onChange={(e) => setValidateData(e.target.checked)}
                 className="rounded border-gray-300"
               />
-              <span className="text-sm text-gray-700">Validate data before import</span>
+              <span className="text-sm text-gray-700">
+                Validate data before import
+              </span>
             </label>
           </div>
         </div>
@@ -234,7 +275,7 @@ export function DataManagement() {
                 disabled={isImporting}
                 className="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isImporting ? 'Importing...' : 'Import Data'}
+                {isImporting ? "Importing..." : "Import Data"}
               </button>
               <button
                 onClick={clearFileSelection}
@@ -255,7 +296,9 @@ export function DataManagement() {
 
         {importResult && (
           <div className="mt-4 p-4 bg-white border border-gray-200 rounded-md">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Import Results</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">
+              Import Results
+            </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-green-600">✅ Imported:</p>
@@ -290,11 +333,18 @@ export function DataManagement() {
 
       {/* Warning Section */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Important Notes</h3>
+        <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+          ⚠️ Important Notes
+        </h3>
         <ul className="text-yellow-700 text-sm space-y-1">
           <li>• Exports include all data with timestamps and metadata</li>
-          <li>• Import operations can add new records but won't modify existing ones</li>
-          <li>• Backups are automatically created before imports when enabled</li>
+          <li>
+            • Import operations can add new records but won't modify existing
+            ones
+          </li>
+          <li>
+            • Backups are automatically created before imports when enabled
+          </li>
           <li>• Large datasets may take time to process - please be patient</li>
           <li>• Always verify your data after import operations</li>
         </ul>

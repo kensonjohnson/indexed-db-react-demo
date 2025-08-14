@@ -39,16 +39,18 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeDatabase = async () => {
       setInitError(null);
-      
+
       try {
         const success = await initDB();
         if (success) {
           setIsReady(true);
         } else {
-          setInitError('Failed to initialize database');
+          setInitError("Failed to initialize database");
         }
       } catch (error) {
-        setInitError(error instanceof Error ? error.message : 'Unknown database error');
+        setInitError(
+          error instanceof Error ? error.message : "Unknown database error",
+        );
       }
     };
 
@@ -108,7 +110,7 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
       executeOperation(() => remove(store, id)),
     [executeOperation],
   );
-  
+
   const clearStoreRecords = useCallback(
     (store: StoresTypes) => executeOperation(() => clearStore(store)),
     [executeOperation],
@@ -141,4 +143,3 @@ export function useDatabase() {
   }
   return context;
 }
-

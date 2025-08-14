@@ -1,30 +1,41 @@
-import { useState, useEffect } from 'react';
-import { useOptimisticUpdate } from '../hooks/useOptimisticUpdate';
-import { useSearch } from '../hooks/useSearch';
-import { Stores } from '../db';
-import type { Skill } from '../types';
+import { useState, useEffect } from "react";
+import { useOptimisticUpdate } from "../hooks/useOptimisticUpdate";
+import { useSearch } from "../hooks/useSearch";
+import { Stores } from "../db";
+import type { Skill } from "../types";
 
-const skillLevels = ['beginner', 'intermediate', 'advanced', 'expert'] as const;
-const skillCategories = ['Frontend', 'Backend', 'DevOps', 'Mobile', 'Database', 'Design'];
+const skillLevels = ["beginner", "intermediate", "advanced", "expert"] as const;
+const skillCategories = [
+  "Frontend",
+  "Backend",
+  "DevOps",
+  "Mobile",
+  "Database",
+  "Design",
+];
 
 export function OptimisticSkills() {
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillLevel, setNewSkillLevel] = useState<Skill['level']>('beginner');
-  const [newSkillCategory, setNewSkillCategory] = useState('Frontend');
+  const [newSkillName, setNewSkillName] = useState("");
+  const [newSkillLevel, setNewSkillLevel] =
+    useState<Skill["level"]>("beginner");
+  const [newSkillCategory, setNewSkillCategory] = useState("Frontend");
   const [editingSkillId, setEditingSkillId] = useState<number | null>(null);
-  const [editSkillName, setEditSkillName] = useState('');
-  const [editSkillLevel, setEditSkillLevel] = useState<Skill['level']>('beginner');
-  const [editSkillCategory, setEditSkillCategory] = useState('Frontend');
+  const [editSkillName, setEditSkillName] = useState("");
+  const [editSkillLevel, setEditSkillLevel] =
+    useState<Skill["level"]>("beginner");
+  const [editSkillCategory, setEditSkillCategory] = useState("Frontend");
 
-  const optimistic = useOptimisticUpdate<Skill>(Stores.Skills, 'skillId');
+  const optimistic = useOptimisticUpdate<Skill>(Stores.Skills, "skillId");
   const { database } = optimistic;
 
-  const { searchTerm, setSearchTerm, filteredData: filteredSkills, clearSearch, isSearching } = useSearch(
-    skills,
-    ['name', 'category', 'level'],
-    300
-  );
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredData: filteredSkills,
+    clearSearch,
+    isSearching,
+  } = useSearch(skills, ["name", "category", "level"], 300);
 
   useEffect(() => {
     if (database.isReady) {
@@ -50,18 +61,18 @@ export function OptimisticSkills() {
     };
 
     // Clear form immediately (optimistic UX)
-    setNewSkillName('');
-    setNewSkillLevel('beginner');
-    setNewSkillCategory('Frontend');
+    setNewSkillName("");
+    setNewSkillLevel("beginner");
+    setNewSkillCategory("Frontend");
 
     const result = await optimistic.optimisticCreate(skillData);
-    
+
     if (result.success) {
       // Add optimistic item to local state immediately
       if (result.item) {
-        setSkills(prev => [...prev, result.item as Skill]);
+        setSkills((prev) => [...prev, result.item as Skill]);
       }
-      
+
       // Clean up the operation after a delay
       setTimeout(() => {
         optimistic.clearOperation(result.operationId);
@@ -88,16 +99,16 @@ export function OptimisticSkills() {
 
   const cancelEdit = () => {
     setEditingSkillId(null);
-    setEditSkillName('');
-    setEditSkillLevel('beginner');
-    setEditSkillCategory('Frontend');
+    setEditSkillName("");
+    setEditSkillLevel("beginner");
+    setEditSkillCategory("Frontend");
   };
 
   // OPTIMISTIC UPDATE - Changes show instantly in the card
   const saveEdit = async () => {
     if (!editingSkillId || !editSkillName.trim()) return;
 
-    const originalSkill = skills.find(s => s.skillId === editingSkillId);
+    const originalSkill = skills.find((s) => s.skillId === editingSkillId);
     if (!originalSkill) return;
 
     const updates = {
@@ -113,62 +124,67 @@ export function OptimisticSkills() {
     });
 
     // Update local state immediately (optimistic)
-    setSkills(prev => prev.map(skill => 
-      skill.skillId === editingSkillId 
-        ? { ...skill, ...updates }
-        : skill
-    ));
+    setSkills((prev) =>
+      prev.map((skill) =>
+        skill.skillId === editingSkillId ? { ...skill, ...updates } : skill,
+      ),
+    );
 
     // Clear editing state immediately (optimistic UX)
     setEditingSkillId(null);
-    setEditSkillName('');
-    setEditSkillLevel('beginner');
-    setEditSkillCategory('Frontend');
+    setEditSkillName("");
+    setEditSkillLevel("beginner");
+    setEditSkillCategory("Frontend");
 
-    const result = await optimistic.optimisticUpdate(editingSkillId, updates, originalSkill, createDefault);
-    
+    const result = await optimistic.optimisticUpdate(
+      editingSkillId,
+      updates,
+      originalSkill,
+      createDefault,
+    );
+
     if (result.success) {
       // Update with confirmed data
       if (result.item) {
-        setSkills(prev => prev.map(skill => 
-          skill.skillId === editingSkillId 
-            ? result.item as Skill
-            : skill
-        ));
+        setSkills((prev) =>
+          prev.map((skill) =>
+            skill.skillId === editingSkillId ? (result.item as Skill) : skill,
+          ),
+        );
       }
-      
+
       // Clean up the operation
       setTimeout(() => {
         optimistic.clearOperation(result.operationId);
       }, 1000);
     } else {
       // Rollback on error
-      setSkills(prev => prev.map(skill => 
-        skill.skillId === editingSkillId 
-          ? originalSkill
-          : skill
-      ));
-      
+      setSkills((prev) =>
+        prev.map((skill) =>
+          skill.skillId === editingSkillId ? originalSkill : skill,
+        ),
+      );
+
       // Restore editing state for retry
       setEditingSkillId(editingSkillId);
       setEditSkillName(originalSkill.name);
       setEditSkillLevel(originalSkill.level);
       setEditSkillCategory(originalSkill.category);
-      
+
       alert(`Failed to update skill: ${result.error}`);
     }
   };
 
   // OPTIMISTIC DELETE - Card disappears immediately from grid
   const deleteSkill = async (skillId: number) => {
-    const skillToDelete = skills.find(s => s.skillId === skillId);
+    const skillToDelete = skills.find((s) => s.skillId === skillId);
     if (!skillToDelete) return;
 
     // Remove from local state immediately (optimistic)
-    setSkills(prev => prev.filter(skill => skill.skillId !== skillId));
+    setSkills((prev) => prev.filter((skill) => skill.skillId !== skillId));
 
     const result = await optimistic.optimisticDelete(skillId, skillToDelete);
-    
+
     if (result.success) {
       // Clean up the operation
       setTimeout(() => {
@@ -176,20 +192,22 @@ export function OptimisticSkills() {
       }, 1000);
     } else {
       // Rollback - restore the skill to the list
-      setSkills(prev => [...prev, skillToDelete].sort((a, b) => 
-        (a.skillId || 0) - (b.skillId || 0)
-      ));
-      
+      setSkills((prev) =>
+        [...prev, skillToDelete].sort(
+          (a, b) => (a.skillId || 0) - (b.skillId || 0),
+        ),
+      );
+
       alert(`Failed to delete skill: ${result.error}`);
     }
   };
 
-  const getLevelColor = (level: Skill['level']) => {
+  const getLevelColor = (level: Skill["level"]) => {
     const colors = {
-      beginner: 'bg-green-100 text-green-800',
-      intermediate: 'bg-yellow-100 text-yellow-800',
-      advanced: 'bg-orange-100 text-orange-800',
-      expert: 'bg-red-100 text-red-800',
+      beginner: "bg-green-100 text-green-800",
+      intermediate: "bg-yellow-100 text-yellow-800",
+      advanced: "bg-orange-100 text-orange-800",
+      expert: "bg-red-100 text-red-800",
     };
     return colors[level];
   };
@@ -205,7 +223,9 @@ export function OptimisticSkills() {
   if (database.initError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 mb-2">Database Error</h2>
+        <h2 className="text-lg font-semibold text-red-800 mb-2">
+          Database Error
+        </h2>
         <p className="text-red-600">{database.initError}</p>
       </div>
     );
@@ -214,13 +234,19 @@ export function OptimisticSkills() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Skills Management (Optimistic Updates)</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Skills Management (Optimistic Updates)
+        </h1>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">⚡ Optimistic Update Pattern</h3>
+          <h3 className="text-lg font-medium text-blue-900 mb-2">
+            ⚡ Optimistic Update Pattern
+          </h3>
           <p className="text-blue-700 text-sm">
-            This demonstrates <strong>optimistic updates</strong> in a card-based layout: skills appear/disappear instantly, 
-            edits show immediately, and the UI automatically rolls back if database operations fail.
-            Notice the difference in responsiveness compared to the traditional Skills page.
+            This demonstrates <strong>optimistic updates</strong> in a
+            card-based layout: skills appear/disappear instantly, edits show
+            immediately, and the UI automatically rolls back if database
+            operations fail. Notice the difference in responsiveness compared to
+            the traditional Skills page.
           </p>
         </div>
       </div>
@@ -238,10 +264,10 @@ export function OptimisticSkills() {
           />
           <select
             value={newSkillLevel}
-            onChange={(e) => setNewSkillLevel(e.target.value as Skill['level'])}
+            onChange={(e) => setNewSkillLevel(e.target.value as Skill["level"])}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {skillLevels.map(level => (
+            {skillLevels.map((level) => (
               <option key={level} value={level}>
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </option>
@@ -252,7 +278,7 @@ export function OptimisticSkills() {
             onChange={(e) => setNewSkillCategory(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {skillCategories.map(category => (
+            {skillCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
@@ -313,15 +339,22 @@ export function OptimisticSkills() {
 
         {filteredSkills.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            {isSearching ? `No skills found matching "${searchTerm}"` : 'No skills found. Add your first skill above!'}
+            {isSearching
+              ? `No skills found matching "${searchTerm}"`
+              : "No skills found. Add your first skill above!"}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredSkills.map((skill) => {
-              const optimisticState = optimistic.getOptimisticState(skill.skillId);
-              
+              const optimisticState = optimistic.getOptimisticState(
+                skill.skillId,
+              );
+
               return (
-                <div key={skill.skillId} className="p-4 border border-gray-200 rounded-lg relative">
+                <div
+                  key={skill.skillId}
+                  className="p-4 border border-gray-200 rounded-lg relative"
+                >
                   {/* Optimistic State Indicator */}
                   {optimisticState && (
                     <div className="absolute top-2 right-2 z-10">
@@ -355,10 +388,12 @@ export function OptimisticSkills() {
                       />
                       <select
                         value={editSkillLevel}
-                        onChange={(e) => setEditSkillLevel(e.target.value as Skill['level'])}
+                        onChange={(e) =>
+                          setEditSkillLevel(e.target.value as Skill["level"])
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {skillLevels.map(level => (
+                        {skillLevels.map((level) => (
                           <option key={level} value={level}>
                             {level.charAt(0).toUpperCase() + level.slice(1)}
                           </option>
@@ -369,7 +404,7 @@ export function OptimisticSkills() {
                         onChange={(e) => setEditSkillCategory(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {skillCategories.map(category => (
+                        {skillCategories.map((category) => (
                           <option key={category} value={category}>
                             {category}
                           </option>
@@ -395,7 +430,9 @@ export function OptimisticSkills() {
                     // Display mode
                     <div>
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-gray-900 flex-1 min-w-0 truncate pr-2">{skill.name}</h3>
+                        <h3 className="font-medium text-gray-900 flex-1 min-w-0 truncate pr-2">
+                          {skill.name}
+                        </h3>
                         <div className="flex gap-1 flex-shrink-0">
                           <button
                             onClick={() => startEdit(skill)}
@@ -406,7 +443,9 @@ export function OptimisticSkills() {
                             ✏️
                           </button>
                           <button
-                            onClick={() => skill.skillId && deleteSkill(skill.skillId)}
+                            onClick={() =>
+                              skill.skillId && deleteSkill(skill.skillId)
+                            }
                             disabled={editingSkillId !== null}
                             className="text-red-600 hover:text-red-700 text-lg font-semibold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed p-1"
                             title="Delete (Instant)"
@@ -416,10 +455,15 @@ export function OptimisticSkills() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(skill.level)}`}>
-                          {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(skill.level)}`}
+                        >
+                          {skill.level.charAt(0).toUpperCase() +
+                            skill.level.slice(1)}
                         </span>
-                        <span className="text-sm text-gray-600">{skill.category}</span>
+                        <span className="text-sm text-gray-600">
+                          {skill.category}
+                        </span>
                       </div>
                     </div>
                   )}

@@ -1,25 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useOptimisticUpdate } from '../hooks/useOptimisticUpdate';
-import { useSearch } from '../hooks/useSearch';
-import { Stores } from '../db';
-import type { User } from '../types';
+import { useState, useEffect } from "react";
+import { useOptimisticUpdate } from "../hooks/useOptimisticUpdate";
+import { useSearch } from "../hooks/useSearch";
+import { Stores } from "../db";
+import type { User } from "../types";
 
 export function OptimisticUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const [newUserName, setNewUserName] = useState('');
-  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
-  const [editUserName, setEditUserName] = useState('');
-  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserName, setEditUserName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
 
-  const optimistic = useOptimisticUpdate<User>(Stores.Users, 'userId');
+  const optimistic = useOptimisticUpdate<User>(Stores.Users, "userId");
   const { database } = optimistic;
 
-  const { searchTerm, setSearchTerm, filteredData: filteredUsers, clearSearch, isSearching } = useSearch(
-    users,
-    ['name', 'email'],
-    300
-  );
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredData: filteredUsers,
+    clearSearch,
+    isSearching,
+  } = useSearch(users, ["name", "email"], 300);
 
   useEffect(() => {
     if (database.isReady) {
@@ -45,17 +47,17 @@ export function OptimisticUsers() {
     };
 
     // Clear form immediately (optimistic UX)
-    setNewUserName('');
-    setNewUserEmail('');
+    setNewUserName("");
+    setNewUserEmail("");
 
     const result = await optimistic.optimisticCreate(userData);
-    
+
     if (result.success) {
       // Add optimistic item to local state immediately
       if (result.item) {
-        setUsers(prev => [...prev, result.item as User]);
+        setUsers((prev) => [...prev, result.item as User]);
       }
-      
+
       // Clean up the operation after a delay
       setTimeout(() => {
         optimistic.clearOperation(result.operationId);
@@ -80,15 +82,15 @@ export function OptimisticUsers() {
 
   const cancelEdit = () => {
     setEditingUserId(null);
-    setEditUserName('');
-    setEditUserEmail('');
+    setEditUserName("");
+    setEditUserEmail("");
   };
 
   // OPTIMISTIC UPDATE - Changes appear instantly, then sync with DB
   const saveEdit = async () => {
     if (!editingUserId || !editUserName.trim() || !editUserEmail.trim()) return;
 
-    const originalUser = users.find(u => u.userId === editingUserId);
+    const originalUser = users.find((u) => u.userId === editingUserId);
     if (!originalUser) return;
 
     const updates = {
@@ -103,60 +105,65 @@ export function OptimisticUsers() {
     });
 
     // Update local state immediately (optimistic)
-    setUsers(prev => prev.map(user => 
-      user.userId === editingUserId 
-        ? { ...user, ...updates }
-        : user
-    ));
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.userId === editingUserId ? { ...user, ...updates } : user,
+      ),
+    );
 
     // Clear editing state immediately (optimistic UX)
     setEditingUserId(null);
-    setEditUserName('');
-    setEditUserEmail('');
+    setEditUserName("");
+    setEditUserEmail("");
 
-    const result = await optimistic.optimisticUpdate(editingUserId, updates, originalUser, createDefault);
-    
+    const result = await optimistic.optimisticUpdate(
+      editingUserId,
+      updates,
+      originalUser,
+      createDefault,
+    );
+
     if (result.success) {
       // Update with confirmed data
       if (result.item) {
-        setUsers(prev => prev.map(user => 
-          user.userId === editingUserId 
-            ? result.item as User
-            : user
-        ));
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.userId === editingUserId ? (result.item as User) : user,
+          ),
+        );
       }
-      
+
       // Clean up the operation
       setTimeout(() => {
         optimistic.clearOperation(result.operationId);
       }, 1000);
     } else {
       // Rollback on error
-      setUsers(prev => prev.map(user => 
-        user.userId === editingUserId 
-          ? originalUser
-          : user
-      ));
-      
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.userId === editingUserId ? originalUser : user,
+        ),
+      );
+
       // Restore editing state for retry
       setEditingUserId(editingUserId);
       setEditUserName(originalUser.name);
       setEditUserEmail(originalUser.email);
-      
+
       alert(`Failed to update user: ${result.error}`);
     }
   };
 
   // OPTIMISTIC DELETE - Item disappears immediately, then syncs with DB
   const deleteUser = async (userId: number) => {
-    const userToDelete = users.find(u => u.userId === userId);
+    const userToDelete = users.find((u) => u.userId === userId);
     if (!userToDelete) return;
 
     // Remove from local state immediately (optimistic)
-    setUsers(prev => prev.filter(user => user.userId !== userId));
+    setUsers((prev) => prev.filter((user) => user.userId !== userId));
 
     const result = await optimistic.optimisticDelete(userId, userToDelete);
-    
+
     if (result.success) {
       // Clean up the operation
       setTimeout(() => {
@@ -164,10 +171,12 @@ export function OptimisticUsers() {
       }, 1000);
     } else {
       // Rollback - restore the user to the list
-      setUsers(prev => [...prev, userToDelete].sort((a, b) => 
-        (a.userId || 0) - (b.userId || 0)
-      ));
-      
+      setUsers((prev) =>
+        [...prev, userToDelete].sort(
+          (a, b) => (a.userId || 0) - (b.userId || 0),
+        ),
+      );
+
       alert(`Failed to delete user: ${result.error}`);
     }
   };
@@ -183,7 +192,9 @@ export function OptimisticUsers() {
   if (database.initError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 mb-2">Database Error</h2>
+        <h2 className="text-lg font-semibold text-red-800 mb-2">
+          Database Error
+        </h2>
         <p className="text-red-600">{database.initError}</p>
       </div>
     );
@@ -192,13 +203,19 @@ export function OptimisticUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Users Management (Optimistic Updates)</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Users Management (Optimistic Updates)
+        </h1>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">🚀 Optimistic Update Pattern</h3>
+          <h3 className="text-lg font-medium text-blue-900 mb-2">
+            🚀 Optimistic Update Pattern
+          </h3>
           <p className="text-blue-700 text-sm">
-            This component demonstrates <strong>optimistic updates</strong>: changes appear immediately in the UI, 
-            then sync with the database. If the database operation fails, the UI automatically rolls back.
-            Compare this with the traditional Users page to see the difference in user experience.
+            This component demonstrates <strong>optimistic updates</strong>:
+            changes appear immediately in the UI, then sync with the database.
+            If the database operation fails, the UI automatically rolls back.
+            Compare this with the traditional Users page to see the difference
+            in user experience.
           </p>
         </div>
       </div>
@@ -276,15 +293,22 @@ export function OptimisticUsers() {
 
         {filteredUsers.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            {isSearching ? `No users found matching "${searchTerm}"` : 'No users found. Add your first user above!'}
+            {isSearching
+              ? `No users found matching "${searchTerm}"`
+              : "No users found. Add your first user above!"}
           </div>
         ) : (
           <div className="space-y-3">
             {filteredUsers.map((user) => {
-              const optimisticState = optimistic.getOptimisticState(user.userId);
-              
+              const optimisticState = optimistic.getOptimisticState(
+                user.userId,
+              );
+
               return (
-                <div key={user.userId} className="p-4 border border-gray-200 rounded-lg relative">
+                <div
+                  key={user.userId}
+                  className="p-4 border border-gray-200 rounded-lg relative"
+                >
                   {/* Optimistic State Indicator */}
                   {optimisticState && (
                     <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -328,7 +352,9 @@ export function OptimisticUsers() {
                       <div className="flex gap-2">
                         <button
                           onClick={saveEdit}
-                          disabled={!editUserName.trim() || !editUserEmail.trim()}
+                          disabled={
+                            !editUserName.trim() || !editUserEmail.trim()
+                          }
                           className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50"
                         >
                           Save (Instant)
@@ -344,11 +370,16 @@ export function OptimisticUsers() {
                   ) : (
                     // Display mode
                     <div className="flex items-center justify-between">
-                      <div className="pr-20"> {/* Add padding to avoid overlap with status indicators */}
-                        <h3 className="font-medium text-gray-900">{user.name}</h3>
+                      <div className="pr-20">
+                        {" "}
+                        {/* Add padding to avoid overlap with status indicators */}
+                        <h3 className="font-medium text-gray-900">
+                          {user.name}
+                        </h3>
                         <p className="text-sm text-gray-600">{user.email}</p>
                         <p className="text-xs text-gray-400">
-                          Created: {new Date(user.createdAt).toLocaleDateString()}
+                          Created:{" "}
+                          {new Date(user.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex gap-2">

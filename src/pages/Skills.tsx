@@ -1,32 +1,52 @@
-import { useState, useEffect } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
-import { useSearch } from '../hooks/useSearch';
-import { useBulkSelection } from '../hooks/useBulkSelection';
-import { BulkActionBar } from '../components/BulkActionBar';
-import { Stores } from '../db';
-import type { Skill } from '../types';
+import { useState, useEffect } from "react";
+import { useDatabase } from "../context/DatabaseContext";
+import { useSearch } from "../hooks/useSearch";
+import { useBulkSelection } from "../hooks/useBulkSelection";
+import { BulkActionBar } from "../components/BulkActionBar";
+import { Stores } from "../db";
+import type { Skill } from "../types";
 
-const skillLevels = ['beginner', 'intermediate', 'advanced', 'expert'] as const;
-const skillCategories = ['Frontend', 'Backend', 'DevOps', 'Mobile', 'Database', 'Design'];
+const skillLevels = ["beginner", "intermediate", "advanced", "expert"] as const;
+const skillCategories = [
+  "Frontend",
+  "Backend",
+  "DevOps",
+  "Mobile",
+  "Database",
+  "Design",
+];
 
 export function Skills() {
-  const { isReady, initError, operationLoading, operationError, create, getAll, update, remove } = useDatabase();
+  const {
+    isReady,
+    initError,
+    operationLoading,
+    operationError,
+    create,
+    getAll,
+    update,
+    remove,
+  } = useDatabase();
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillLevel, setNewSkillLevel] = useState<Skill['level']>('beginner');
-  const [newSkillCategory, setNewSkillCategory] = useState('Frontend');
+  const [newSkillName, setNewSkillName] = useState("");
+  const [newSkillLevel, setNewSkillLevel] =
+    useState<Skill["level"]>("beginner");
+  const [newSkillCategory, setNewSkillCategory] = useState("Frontend");
   const [editingSkillId, setEditingSkillId] = useState<number | null>(null);
-  const [editSkillName, setEditSkillName] = useState('');
-  const [editSkillLevel, setEditSkillLevel] = useState<Skill['level']>('beginner');
-  const [editSkillCategory, setEditSkillCategory] = useState('Frontend');
+  const [editSkillName, setEditSkillName] = useState("");
+  const [editSkillLevel, setEditSkillLevel] =
+    useState<Skill["level"]>("beginner");
+  const [editSkillCategory, setEditSkillCategory] = useState("Frontend");
 
-  const { searchTerm, setSearchTerm, filteredData: filteredSkills, clearSearch, isSearching } = useSearch(
-    skills,
-    ['name', 'category', 'level'],
-    300
-  );
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredData: filteredSkills,
+    clearSearch,
+    isSearching,
+  } = useSearch(skills, ["name", "category", "level"], 300);
 
-  const bulkSelection = useBulkSelection(filteredSkills, 'skillId');
+  const bulkSelection = useBulkSelection(filteredSkills, "skillId");
 
   useEffect(() => {
     if (isReady) {
@@ -43,18 +63,18 @@ export function Skills() {
 
   const createSkill = async () => {
     if (!newSkillName.trim()) return;
-    
-    const skillData: Omit<Skill, 'skillId'> = {
+
+    const skillData: Omit<Skill, "skillId"> = {
       name: newSkillName.trim(),
       level: newSkillLevel,
       category: newSkillCategory,
     };
-    
+
     const result = await create(Stores.Skills, skillData);
     if (result) {
-      setNewSkillName('');
-      setNewSkillLevel('beginner');
-      setNewSkillCategory('Frontend');
+      setNewSkillName("");
+      setNewSkillLevel("beginner");
+      setNewSkillCategory("Frontend");
       await loadSkills();
     }
   };
@@ -77,9 +97,9 @@ export function Skills() {
 
   const cancelEdit = () => {
     setEditingSkillId(null);
-    setEditSkillName('');
-    setEditSkillLevel('beginner');
-    setEditSkillCategory('Frontend');
+    setEditSkillName("");
+    setEditSkillLevel("beginner");
+    setEditSkillCategory("Frontend");
   };
 
   const saveEdit = async () => {
@@ -97,12 +117,17 @@ export function Skills() {
       category: editSkillCategory,
     });
 
-    const result = await update(Stores.Skills, editingSkillId, updatedData, createDefault);
+    const result = await update(
+      Stores.Skills,
+      editingSkillId,
+      updatedData,
+      createDefault,
+    );
     if (result) {
       setEditingSkillId(null);
-      setEditSkillName('');
-      setEditSkillLevel('beginner');
-      setEditSkillCategory('Frontend');
+      setEditSkillName("");
+      setEditSkillLevel("beginner");
+      setEditSkillCategory("Frontend");
       await loadSkills();
     }
   };
@@ -110,34 +135,37 @@ export function Skills() {
   const bulkDelete = async () => {
     const selectedItems = bulkSelection.selectedItems;
     let successCount = 0;
-    
+
     for (const skill of selectedItems) {
       if (skill.skillId) {
         const result = await remove(Stores.Skills, skill.skillId);
         if (result) successCount++;
       }
     }
-    
+
     if (successCount > 0) {
       bulkSelection.clearSelection();
       await loadSkills();
     }
-    
+
     if (successCount !== selectedItems.length) {
-      alert(`${successCount} of ${selectedItems.length} skills deleted successfully.`);
+      alert(
+        `${successCount} of ${selectedItems.length} skills deleted successfully.`,
+      );
     }
   };
 
   const bulkExport = () => {
     const selectedItems = bulkSelection.selectedItems;
     const dataStr = JSON.stringify(selectedItems, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `skills_export_${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = `skills_export_${new Date().toISOString().split("T")[0]}.json`;
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   };
 
@@ -152,26 +180,30 @@ export function Skills() {
   if (initError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 mb-2">Database Error</h2>
+        <h2 className="text-lg font-semibold text-red-800 mb-2">
+          Database Error
+        </h2>
         <p className="text-red-600">{initError}</p>
       </div>
     );
   }
 
-  const getLevelColor = (level: Skill['level']) => {
+  const getLevelColor = (level: Skill["level"]) => {
     const colors = {
-      beginner: 'bg-green-100 text-green-800',
-      intermediate: 'bg-yellow-100 text-yellow-800',
-      advanced: 'bg-orange-100 text-orange-800',
-      expert: 'bg-red-100 text-red-800',
+      beginner: "bg-green-100 text-green-800",
+      intermediate: "bg-yellow-100 text-yellow-800",
+      advanced: "bg-orange-100 text-orange-800",
+      expert: "bg-red-100 text-red-800",
     };
     return colors[level];
   };
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Skills Management</h1>
-      
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        Skills Management
+      </h1>
+
       {/* Create Skill Form */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Add New Skill</h2>
@@ -185,10 +217,10 @@ export function Skills() {
           />
           <select
             value={newSkillLevel}
-            onChange={(e) => setNewSkillLevel(e.target.value as Skill['level'])}
+            onChange={(e) => setNewSkillLevel(e.target.value as Skill["level"])}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {skillLevels.map(level => (
+            {skillLevels.map((level) => (
               <option key={level} value={level}>
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </option>
@@ -199,7 +231,7 @@ export function Skills() {
             onChange={(e) => setNewSkillCategory(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {skillCategories.map(category => (
+            {skillCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
@@ -210,7 +242,7 @@ export function Skills() {
             disabled={operationLoading || !newSkillName.trim()}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {operationLoading ? 'Adding...' : 'Add Skill'}
+            {operationLoading ? "Adding..." : "Add Skill"}
           </button>
         </div>
         {operationError && (
@@ -239,8 +271,9 @@ export function Skills() {
                 <input
                   type="checkbox"
                   checked={bulkSelection.isAllSelected}
-                  ref={checkbox => {
-                    if (checkbox) checkbox.indeterminate = bulkSelection.isSomeSelected;
+                  ref={(checkbox) => {
+                    if (checkbox)
+                      checkbox.indeterminate = bulkSelection.isSomeSelected;
                   }}
                   onChange={bulkSelection.toggleSelectAll}
                   className="rounded border-gray-300"
@@ -287,15 +320,20 @@ export function Skills() {
             <div className="text-gray-600">Loading...</div>
           </div>
         )}
-        
+
         {filteredSkills.length === 0 && !operationLoading ? (
           <div className="text-center py-8 text-gray-500">
-            {isSearching ? `No skills found matching "${searchTerm}"` : 'No skills found. Add your first skill above!'}
+            {isSearching
+              ? `No skills found matching "${searchTerm}"`
+              : "No skills found. Add your first skill above!"}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredSkills.map((skill) => (
-              <div key={skill.skillId} className="p-4 border border-gray-200 rounded-lg">
+              <div
+                key={skill.skillId}
+                className="p-4 border border-gray-200 rounded-lg"
+              >
                 {editingSkillId === skill.skillId ? (
                   // Edit mode
                   <div className="space-y-3">
@@ -308,10 +346,12 @@ export function Skills() {
                     />
                     <select
                       value={editSkillLevel}
-                      onChange={(e) => setEditSkillLevel(e.target.value as Skill['level'])}
+                      onChange={(e) =>
+                        setEditSkillLevel(e.target.value as Skill["level"])
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {skillLevels.map(level => (
+                      {skillLevels.map((level) => (
                         <option key={level} value={level}>
                           {level.charAt(0).toUpperCase() + level.slice(1)}
                         </option>
@@ -322,7 +362,7 @@ export function Skills() {
                       onChange={(e) => setEditSkillCategory(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {skillCategories.map(category => (
+                      {skillCategories.map((category) => (
                         <option key={category} value={category}>
                           {category}
                         </option>
@@ -334,7 +374,7 @@ export function Skills() {
                         disabled={operationLoading || !editSkillName.trim()}
                         className="flex-1 px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50"
                       >
-                        {operationLoading ? 'Saving...' : 'Save'}
+                        {operationLoading ? "Saving..." : "Save"}
                       </button>
                       <button
                         onClick={cancelEdit}
@@ -352,11 +392,20 @@ export function Skills() {
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <input
                           type="checkbox"
-                          checked={skill.skillId ? bulkSelection.isSelected(skill.skillId) : false}
-                          onChange={() => skill.skillId && bulkSelection.toggleSelection(skill.skillId)}
+                          checked={
+                            skill.skillId
+                              ? bulkSelection.isSelected(skill.skillId)
+                              : false
+                          }
+                          onChange={() =>
+                            skill.skillId &&
+                            bulkSelection.toggleSelection(skill.skillId)
+                          }
                           className="rounded border-gray-300 mt-0.5"
                         />
-                        <h3 className="font-medium text-gray-900 truncate">{skill.name}</h3>
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {skill.name}
+                        </h3>
                       </div>
                       <div className="flex gap-1 ml-2">
                         <button
@@ -368,7 +417,9 @@ export function Skills() {
                           ✏️
                         </button>
                         <button
-                          onClick={() => skill.skillId && deleteSkill(skill.skillId)}
+                          onClick={() =>
+                            skill.skillId && deleteSkill(skill.skillId)
+                          }
                           disabled={operationLoading || editingSkillId !== null}
                           className="text-red-600 hover:text-red-700 text-lg font-semibold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed p-1"
                           title="Delete"
@@ -378,10 +429,15 @@ export function Skills() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(skill.level)}`}>
-                        {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(skill.level)}`}
+                      >
+                        {skill.level.charAt(0).toUpperCase() +
+                          skill.level.slice(1)}
                       </span>
-                      <span className="text-sm text-gray-600">{skill.category}</span>
+                      <span className="text-sm text-gray-600">
+                        {skill.category}
+                      </span>
                     </div>
                   </div>
                 )}

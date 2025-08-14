@@ -1,19 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
-import { useSearch } from '../hooks/useSearch';
-import { Stores } from '../db';
-import type { User, Skill, UserSkill } from '../types';
+import { useState, useEffect } from "react";
+import { useDatabase } from "../context/DatabaseContext";
+import { useSearch } from "../hooks/useSearch";
+import { Stores } from "../db";
+import type { User, Skill, UserSkill } from "../types";
 
-const proficiencyLevels = ['learning', 'familiar', 'proficient', 'expert'] as const;
+const proficiencyLevels = [
+  "learning",
+  "familiar",
+  "proficient",
+  "expert",
+] as const;
 
 export function UserSkills() {
-  const { isReady, initError, operationLoading, operationError, create, getAll, remove } = useDatabase();
+  const {
+    isReady,
+    initError,
+    operationLoading,
+    operationError,
+    create,
+    getAll,
+    remove,
+  } = useDatabase();
   const [users, setUsers] = useState<User[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<number | null>(null);
-  const [proficiencyLevel, setProficiencyLevel] = useState<UserSkill['proficiencyLevel']>('learning');
+  const [proficiencyLevel, setProficiencyLevel] =
+    useState<UserSkill["proficiencyLevel"]>("learning");
 
   // Enhanced UserSkill type for display with user and skill names
   type EnhancedUserSkill = UserSkill & {
@@ -23,12 +37,20 @@ export function UserSkills() {
     skillCategory: string;
   };
 
-  const [enhancedUserSkills, setEnhancedUserSkills] = useState<EnhancedUserSkill[]>([]);
+  const [enhancedUserSkills, setEnhancedUserSkills] = useState<
+    EnhancedUserSkill[]
+  >([]);
 
-  const { searchTerm, setSearchTerm, filteredData: filteredUserSkills, clearSearch, isSearching } = useSearch(
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredData: filteredUserSkills,
+    clearSearch,
+    isSearching,
+  } = useSearch(
     enhancedUserSkills,
-    ['userName', 'userEmail', 'skillName', 'skillCategory', 'proficiencyLevel'],
-    300
+    ["userName", "userEmail", "skillName", "skillCategory", "proficiencyLevel"],
+    300,
   );
 
   useEffect(() => {
@@ -51,16 +73,16 @@ export function UserSkills() {
 
   // Create enhanced user skills with names for display
   useEffect(() => {
-    const enhanced: EnhancedUserSkill[] = userSkills.map(userSkill => {
-      const user = users.find(u => u.userId === userSkill.userId);
-      const skill = skills.find(s => s.skillId === userSkill.skillId);
-      
+    const enhanced: EnhancedUserSkill[] = userSkills.map((userSkill) => {
+      const user = users.find((u) => u.userId === userSkill.userId);
+      const skill = skills.find((s) => s.skillId === userSkill.skillId);
+
       return {
         ...userSkill,
-        userName: user?.name || 'Unknown User',
-        userEmail: user?.email || 'unknown@email.com',
-        skillName: skill?.name || 'Unknown Skill',
-        skillCategory: skill?.category || 'Unknown Category',
+        userName: user?.name || "Unknown User",
+        userEmail: user?.email || "unknown@email.com",
+        skillName: skill?.name || "Unknown Skill",
+        skillCategory: skill?.category || "Unknown Category",
       };
     });
 
@@ -72,15 +94,15 @@ export function UserSkills() {
 
     // Check if this combination already exists
     const exists = userSkills.some(
-      us => us.userId === selectedUserId && us.skillId === selectedSkillId
+      (us) => us.userId === selectedUserId && us.skillId === selectedSkillId,
     );
 
     if (exists) {
-      alert('This user already has this skill assigned!');
+      alert("This user already has this skill assigned!");
       return;
     }
 
-    const userSkillData: Omit<UserSkill, 'userSkillId'> = {
+    const userSkillData: Omit<UserSkill, "userSkillId"> = {
       userId: selectedUserId,
       skillId: selectedSkillId,
       proficiencyLevel,
@@ -91,7 +113,7 @@ export function UserSkills() {
     if (result) {
       setSelectedUserId(null);
       setSelectedSkillId(null);
-      setProficiencyLevel('learning');
+      setProficiencyLevel("learning");
       await loadAllData();
     }
   };
@@ -103,12 +125,12 @@ export function UserSkills() {
     }
   };
 
-  const getProficiencyColor = (level: UserSkill['proficiencyLevel']) => {
+  const getProficiencyColor = (level: UserSkill["proficiencyLevel"]) => {
     const colors = {
-      learning: 'bg-blue-100 text-blue-800',
-      familiar: 'bg-green-100 text-green-800',
-      proficient: 'bg-yellow-100 text-yellow-800',
-      expert: 'bg-red-100 text-red-800',
+      learning: "bg-blue-100 text-blue-800",
+      familiar: "bg-green-100 text-green-800",
+      proficient: "bg-yellow-100 text-yellow-800",
+      expert: "bg-red-100 text-red-800",
     };
     return colors[level];
   };
@@ -124,7 +146,9 @@ export function UserSkills() {
   if (initError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-red-800 mb-2">Database Error</h2>
+        <h2 className="text-lg font-semibold text-red-800 mb-2">
+          Database Error
+        </h2>
         <p className="text-red-600">{initError}</p>
       </div>
     );
@@ -132,7 +156,9 @@ export function UserSkills() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">User Skills Management</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        User Skills Management
+      </h1>
       <p className="text-gray-600 mb-6">
         Manage the many-to-many relationship between users and their skills.
       </p>
@@ -142,25 +168,29 @@ export function UserSkills() {
         <h2 className="text-xl font-semibold mb-4">Assign Skill to User</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <select
-            value={selectedUserId || ''}
-            onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
+            value={selectedUserId || ""}
+            onChange={(e) =>
+              setSelectedUserId(e.target.value ? Number(e.target.value) : null)
+            }
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select User</option>
-            {users.map(user => (
+            {users.map((user) => (
               <option key={user.userId} value={user.userId}>
                 {user.name} ({user.email})
               </option>
             ))}
           </select>
-          
+
           <select
-            value={selectedSkillId || ''}
-            onChange={(e) => setSelectedSkillId(e.target.value ? Number(e.target.value) : null)}
+            value={selectedSkillId || ""}
+            onChange={(e) =>
+              setSelectedSkillId(e.target.value ? Number(e.target.value) : null)
+            }
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select Skill</option>
-            {skills.map(skill => (
+            {skills.map((skill) => (
               <option key={skill.skillId} value={skill.skillId}>
                 {skill.name} ({skill.category})
               </option>
@@ -169,10 +199,14 @@ export function UserSkills() {
 
           <select
             value={proficiencyLevel}
-            onChange={(e) => setProficiencyLevel(e.target.value as UserSkill['proficiencyLevel'])}
+            onChange={(e) =>
+              setProficiencyLevel(
+                e.target.value as UserSkill["proficiencyLevel"],
+              )
+            }
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {proficiencyLevels.map(level => (
+            {proficiencyLevels.map((level) => (
               <option key={level} value={level}>
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </option>
@@ -184,7 +218,7 @@ export function UserSkills() {
             disabled={operationLoading || !selectedUserId || !selectedSkillId}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {operationLoading ? 'Assigning...' : 'Assign Skill'}
+            {operationLoading ? "Assigning..." : "Assign Skill"}
           </button>
         </div>
         {operationError && (
@@ -242,31 +276,47 @@ export function UserSkills() {
           <div className="text-center py-8 text-gray-500">
             {isSearching
               ? `No assignments found matching "${searchTerm}"`
-              : 'No skills assigned yet. Assign some skills above!'}
+              : "No skills assigned yet. Assign some skills above!"}
           </div>
         ) : (
           <div className="space-y-3">
             {filteredUserSkills.map((userSkill) => (
-              <div key={userSkill.userSkillId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div
+                key={userSkill.userSkillId}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-medium text-gray-900">{userSkill.userName}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {userSkill.userName}
+                    </h3>
                     <span className="text-sm text-gray-500">→</span>
-                    <span className="font-medium text-blue-900">{userSkill.skillName}</span>
-                    <span className="text-sm text-gray-500">({userSkill.skillCategory})</span>
+                    <span className="font-medium text-blue-900">
+                      {userSkill.skillName}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({userSkill.skillCategory})
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-gray-600">{userSkill.userEmail}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getProficiencyColor(userSkill.proficiencyLevel)}`}>
-                      {userSkill.proficiencyLevel.charAt(0).toUpperCase() + userSkill.proficiencyLevel.slice(1)}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getProficiencyColor(userSkill.proficiencyLevel)}`}
+                    >
+                      {userSkill.proficiencyLevel.charAt(0).toUpperCase() +
+                        userSkill.proficiencyLevel.slice(1)}
                     </span>
                     <span className="text-gray-400">
-                      Assigned: {new Date(userSkill.assignedAt).toLocaleDateString()}
+                      Assigned:{" "}
+                      {new Date(userSkill.assignedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
                 <button
-                  onClick={() => userSkill.userSkillId && unassignSkill(userSkill.userSkillId)}
+                  onClick={() =>
+                    userSkill.userSkillId &&
+                    unassignSkill(userSkill.userSkillId)
+                  }
                   disabled={operationLoading}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50"
                 >

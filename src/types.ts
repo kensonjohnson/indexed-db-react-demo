@@ -8,7 +8,7 @@ export type User = {
 export type Skill = {
   skillId?: number;
   name: string;
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  level: "beginner" | "intermediate" | "advanced" | "expert";
   category: string;
 };
 
@@ -16,6 +16,6 @@ export type UserSkill = {
   userSkillId?: number;
   userId: number;
   skillId: number;
-  proficiencyLevel: 'learning' | 'familiar' | 'proficient' | 'expert';
+  proficiencyLevel: "learning" | "familiar" | "proficient" | "expert";
   assignedAt: Date;
 };

@@ -16,7 +16,11 @@ export function BulkActionBar({
   if (selectedCount === 0) return null;
 
   const handleBulkDelete = () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedCount} item${selectedCount > 1 ? 's' : ''}?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedCount} item${selectedCount > 1 ? "s" : ""}?`,
+      )
+    ) {
       onBulkDelete();
     }
   };
@@ -26,7 +30,7 @@ export function BulkActionBar({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-blue-900 font-medium">
-            {selectedCount} item{selectedCount > 1 ? 's' : ''} selected
+            {selectedCount} item{selectedCount > 1 ? "s" : ""} selected
           </span>
           <div className="flex gap-2">
             <button
@@ -34,14 +38,14 @@ export function BulkActionBar({
               disabled={isLoading}
               className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Deleting...' : 'Delete Selected'}
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </button>
             <button
               onClick={onBulkExport}
               disabled={isLoading}
               className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Exporting...' : 'Export Selected'}
+              {isLoading ? "Exporting..." : "Export Selected"}
             </button>
           </div>
         </div>

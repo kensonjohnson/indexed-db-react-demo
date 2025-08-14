@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 
 export function useSearch<T>(
   data: T[],
   searchFields: (keyof T)[],
-  debounceMs: number = 300
+  debounceMs: number = 300,
 ) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   // Debounce the search term
   useEffect(() => {
@@ -24,14 +24,14 @@ export function useSearch<T>(
     }
 
     const lowercaseSearch = debouncedSearchTerm.toLowerCase();
-    
+
     return data.filter((item) => {
       return searchFields.some((field) => {
         const fieldValue = item[field];
-        if (typeof fieldValue === 'string') {
+        if (typeof fieldValue === "string") {
           return fieldValue.toLowerCase().includes(lowercaseSearch);
         }
-        if (typeof fieldValue === 'number') {
+        if (typeof fieldValue === "number") {
           return fieldValue.toString().includes(lowercaseSearch);
         }
         return false;
@@ -40,8 +40,8 @@ export function useSearch<T>(
   }, [data, debouncedSearchTerm, searchFields]);
 
   const clearSearch = () => {
-    setSearchTerm('');
-    setDebouncedSearchTerm('');
+    setSearchTerm("");
+    setDebouncedSearchTerm("");
   };
 
   return {

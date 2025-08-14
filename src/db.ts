@@ -62,10 +62,14 @@ function globalDatabaseErrorHandler(e: Event) {
 /**
  * Helper to format IDB errors consistently
  */
-function formatDBError(error: DOMException | null, operation: string, storeName?: string): string {
-  const baseMessage = `IndexedDB ${operation} failed${storeName ? ` on store '${storeName}'` : ''}`;
+function formatDBError(
+  error: DOMException | null,
+  operation: string,
+  storeName?: string,
+): string {
+  const baseMessage = `IndexedDB ${operation} failed${storeName ? ` on store '${storeName}'` : ""}`;
   if (!error) return baseMessage;
-  
+
   return `${baseMessage}: ${error.name} - ${error.message}`;
 }
 
@@ -110,7 +114,7 @@ export async function initDB(): Promise<boolean> {
         // You may also operate on this returned `IDBObjectStore`
         // to create create indices with `IDBObjectStore.createIndex`.
       }
-      
+
       // Initialize `UserSkills` object store (junction table).
       if (!_db.objectStoreNames.contains(Stores.UserSkills)) {
         // This specifies `Keys.UserSkills` as a monotonically increasing and automatically
@@ -121,10 +125,12 @@ export async function initDB(): Promise<boolean> {
         });
 
         // Create indices for efficient queries on foreign keys
-        userSkillsStore.createIndex('userId', 'userId', { unique: false });
-        userSkillsStore.createIndex('skillId', 'skillId', { unique: false });
+        userSkillsStore.createIndex("userId", "userId", { unique: false });
+        userSkillsStore.createIndex("skillId", "skillId", { unique: false });
         // Composite index to ensure unique user-skill combinations
-        userSkillsStore.createIndex('userSkill', ['userId', 'skillId'], { unique: true });
+        userSkillsStore.createIndex("userSkill", ["userId", "skillId"], {
+          unique: true,
+        });
       }
     };
 
@@ -159,7 +165,7 @@ export async function create<T>(
 
     // This runs if an error occurs during the transaction.
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'create', storeName));
+      console.error(formatDBError(transaction.error, "create", storeName));
       resolve(null);
     };
 
@@ -167,7 +173,7 @@ export async function create<T>(
     const addRequest: IDBRequest<IDBValidKey> = store.add(data);
 
     addRequest.onerror = () => {
-      console.error(formatDBError(addRequest.error, 'create', storeName));
+      console.error(formatDBError(addRequest.error, "create", storeName));
       resolve(null);
     };
 
@@ -179,8 +185,6 @@ export async function create<T>(
     };
   });
 }
-
-
 
 /**
  * Returns the the object record or null on failure.
@@ -194,7 +198,7 @@ export async function get<T>(
 
     // This runs if an error occurs during the transaction.
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'get', storeName));
+      console.error(formatDBError(transaction.error, "get", storeName));
       resolve(null);
     };
 
@@ -203,7 +207,7 @@ export async function get<T>(
     const getRequest: IDBRequest<T | undefined> = store.get(id);
 
     getRequest.onerror = () => {
-      console.error(formatDBError(getRequest.error, 'get', storeName));
+      console.error(formatDBError(getRequest.error, "get", storeName));
       resolve(null);
     };
 
@@ -216,8 +220,6 @@ export async function get<T>(
   });
 }
 
-
-
 /**
  * Returns the the object records as an array or null on failure.
  */
@@ -227,7 +229,7 @@ export async function getAll<T>(storeName: StoresTypes): Promise<T[] | null> {
 
     // This runs if an error occurs during the transaction.
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'getAll', storeName));
+      console.error(formatDBError(transaction.error, "getAll", storeName));
       resolve(null);
     };
 
@@ -237,7 +239,7 @@ export async function getAll<T>(storeName: StoresTypes): Promise<T[] | null> {
       store.openCursor();
 
     cursorRequest.onerror = () => {
-      console.error(formatDBError(cursorRequest.error, 'getAll', storeName));
+      console.error(formatDBError(cursorRequest.error, "getAll", storeName));
       resolve(null);
     };
 
@@ -268,8 +270,6 @@ export async function getAll<T>(storeName: StoresTypes): Promise<T[] | null> {
   });
 }
 
-
-
 /**
  * Returns the the updated object record or null on failure.
  */
@@ -284,7 +284,7 @@ export async function update<T extends object>(
 
     // This runs if an error occurs during the transaction.
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'update', storeName));
+      console.error(formatDBError(transaction.error, "update", storeName));
       resolve(null);
     };
 
@@ -292,7 +292,7 @@ export async function update<T extends object>(
     const getRequest: IDBRequest<T | undefined> = store.get(id);
 
     getRequest.onerror = () => {
-      console.error(formatDBError(getRequest.error, 'update', storeName));
+      console.error(formatDBError(getRequest.error, "update", storeName));
       resolve(null);
     };
 
@@ -318,7 +318,7 @@ export async function update<T extends object>(
       const updateRequest: IDBRequest<IDBValidKey> = store.put(retrievedData);
 
       updateRequest.onerror = () => {
-        console.error(formatDBError(updateRequest.error, 'update', storeName));
+        console.error(formatDBError(updateRequest.error, "update", storeName));
         resolve(null);
       };
 
@@ -328,8 +328,6 @@ export async function update<T extends object>(
     };
   });
 }
-
-
 
 /**
  * Returns the the deleted object's id or null on failure.
@@ -343,7 +341,7 @@ export async function remove(
 
     // This runs if an error occurs during the transaction.
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'remove', storeName));
+      console.error(formatDBError(transaction.error, "remove", storeName));
       resolve(false);
     };
 
@@ -352,7 +350,7 @@ export async function remove(
     const deleteRequest: IDBRequest<undefined> = store.delete(id);
 
     deleteRequest.onerror = () => {
-      console.error(formatDBError(deleteRequest.error, 'remove', storeName));
+      console.error(formatDBError(deleteRequest.error, "remove", storeName));
       resolve(false);
     };
 
@@ -362,8 +360,6 @@ export async function remove(
   });
 }
 
-
-
 /**
  * Clears all records from a specific store.
  */
@@ -372,7 +368,7 @@ export async function clearStore(storeName: StoresTypes): Promise<boolean> {
     const transaction = _db.transaction([storeName], "readwrite");
 
     transaction.onerror = () => {
-      console.error(formatDBError(transaction.error, 'clearStore', storeName));
+      console.error(formatDBError(transaction.error, "clearStore", storeName));
       resolve(false);
     };
 
@@ -380,7 +376,7 @@ export async function clearStore(storeName: StoresTypes): Promise<boolean> {
     const clearRequest: IDBRequest<undefined> = store.clear();
 
     clearRequest.onerror = () => {
-      console.error(formatDBError(clearRequest.error, 'clearStore', storeName));
+      console.error(formatDBError(clearRequest.error, "clearStore", storeName));
       resolve(false);
     };
 
@@ -389,5 +385,3 @@ export async function clearStore(storeName: StoresTypes): Promise<boolean> {
     };
   });
 }
-
-

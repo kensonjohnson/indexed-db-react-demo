@@ -1,5 +1,5 @@
-import { Stores } from '../db';
-import type { User, Skill, UserSkill } from '../types';
+import { Stores } from "../db";
+import type { User, Skill, UserSkill } from "../types";
 
 export type DatabaseExport = {
   version: string;
@@ -16,7 +16,7 @@ export type DatabaseExport = {
 };
 
 export async function exportAllData(
-  getAll: <T>(store: any) => Promise<T[] | null>
+  getAll: <T>(store: any) => Promise<T[] | null>,
 ): Promise<DatabaseExport> {
   const [users, skills, userSkills] = await Promise.all([
     getAll<User>(Stores.Users),
@@ -25,7 +25,7 @@ export async function exportAllData(
   ]);
 
   const exportData: DatabaseExport = {
-    version: '1.0.0',
+    version: "1.0.0",
     timestamp: new Date().toISOString(),
     data: {
       users: users || [],
@@ -33,8 +33,11 @@ export async function exportAllData(
       userSkills: userSkills || [],
     },
     metadata: {
-      totalRecords: (users?.length || 0) + (skills?.length || 0) + (userSkills?.length || 0),
-      exportedBy: 'IndexedDB Demo App',
+      totalRecords:
+        (users?.length || 0) +
+        (skills?.length || 0) +
+        (userSkills?.length || 0),
+      exportedBy: "IndexedDB Demo App",
     },
   };
 
@@ -43,12 +46,12 @@ export async function exportAllData(
 
 export function downloadAsJson(data: DatabaseExport, filename?: string) {
   const jsonString = JSON.stringify(data, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
+  const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
-  const defaultFilename = `database_export_${new Date().toISOString().split('T')[0]}.json`;
-  
-  const link = document.createElement('a');
+
+  const defaultFilename = `database_export_${new Date().toISOString().split("T")[0]}.json`;
+
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename || defaultFilename;
   document.body.appendChild(link);
@@ -64,6 +67,6 @@ export function getExportSummary(exportData: DatabaseExport): string {
     `${skills.length} skills`,
     `${userSkills.length} user-skill assignments`,
   ];
-  
-  return `Exported ${exportData.metadata.totalRecords} total records (${summary.join(', ')})`;
+
+  return `Exported ${exportData.metadata.totalRecords} total records (${summary.join(", ")})`;
 }

@@ -10,9 +10,12 @@ import { UserSkills } from "./pages/UserSkills";
 import { DataManagement } from "./pages/DataManagement";
 
 export default function App() {
+  // Use basename for GitHub Pages deployment
+  const basename = import.meta.env.PROD ? '/indexed-db-react-demo' : '';
+
   return (
     <DatabaseProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
